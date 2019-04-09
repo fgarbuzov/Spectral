@@ -57,13 +57,21 @@ class TensorField:
         return self.mesh.coeff(self.func, axes)
         
 #23456789012345678901234567890123456789012345678901234567890123456789012345678 
-    def int(self, *dims):
+    def int(self, *dims, coord='cartesian'):
         "Calculate a definite integral along given dimensions"
         if len(dims) == 0:
             dims = range(self.mesh.ndim)
         axes = tuple(d - self.mesh.ndim if d in dims else None 
                      for d in range(self.mesh.ndim))
-        func = self.mesh.int(self.func, axes)
+        if coord == 'cartesian':
+            func = self.mesh.int(self.func, axes)
+        elif coord == 'cylindrical':
+            if self.mesh.ndim != 3:
+                raise ValueError('Three dimensions expected.')
+            r = self.mesh.grid()[1][:,None]
+            func = self.mesh.int(r*self.func, axes)
+        else:
+            raise ValueError(f'Unknown coordinates: {coord}')
         
         mask = tuple(axis is not None for axis in axes)
         mesh = self.mesh.remove_dims(mask)
@@ -86,19 +94,66 @@ class TensorField:
         func = self.mesh.match_domains(self.func, axes)
         return TensorField(self.mesh, func)    
     
-    def grad(self, bval=None):
+    def grad(self, bval=None, coord='cartesian', rank=None):
         "Calculate a gradient"
-        funcs = []
-        for dim, axis in enumerate(range(-self.mesh.ndim, 0)):
-            funcs.append(self.mesh.diff(self.func, axis, dim, bval))
-        return TensorField(self.mesh, np.stack(funcs))
-    
-    def div(self, bval=None):
+        if rank is None:
+            rank = self.ndim
+        d_func = (self.mesh.diff(self.func, axis, dim, bval)
+                  for dim, axis in enumerate(range(-self.mesh.ndim, 0)))
+        if coord == 'cartesian':
+            func = np.stack(d_func)
+        elif coord == 'cylindrical':
+            if self.mesh.ndim != 3:
+                raise ValueError('Three dimensions expected.')
+            r = self.mesh.grid()[1][:,None]
+            U_x, U_r, U_φ = d_func
+            if rank == 0: # scalar
+                func = np.stack((U_x, U_r, U_φ/r))
+            elif rank == 1: # vector
+                Ux, Ur, Uφ = self.func
+                Ux_x, Ur_x, Uφ_x = U_x
+                Ux_r, Ur_r, Uφ_r = U_r
+                Ux_φ, Ur_φ, Uφ_φ = U_φ
+                func = np.array([[Ux_x, Ux_r, Ux_φ/r],
+                                 [Ur_x, Ur_r, (Ur_φ - Uφ)/r],
+                                 [Uφ_x, Uφ_r, (Uφ_φ + Ur)/r]])
+            else:
+                raise ValueError(f'Improper tensor rank: {rank}')
+        else:
+            raise ValueError(f'Unknown coordinates: {coord}')
+        return TensorField(self.mesh, func)
+            
+
+    def div(self, bval=None, coord='cartesian', rank=None):
         "Calculate a divergence"
-        res = 0
-        for dim, axis in enumerate(range(-self.mesh.ndim, 0)):
-            res += self.mesh.diff(self.func[axis], axis, dim, bval)
-        return TensorField(self.mesh, res)
+        if rank is None:
+            rank = self.ndim
+        d_func = (self.mesh.diff(self.func[axis], axis, dim, bval)
+                  for dim, axis in enumerate(range(-self.mesh.ndim, 0)))
+        if coord == 'cartesian':
+            func = sum(d_func)
+        elif coord == 'cylindrical':
+            if self.mesh.ndim != 3:
+                raise ValueError('Three dimensions expected.')
+            if rank == 0:
+                raise ValueError('Divergence of scalar function is undefined.')
+            r = self.mesh.grid()[1][:,None]
+            if rank == 1:
+                Ux, Ur, Uφ = self.func
+                Ux_x, Ur_r, Uφ_φ = d_func
+                func = Ux_x + Ur_r + Ur/r + Uφ_φ/r
+            elif rank == 2:
+                (Uxx, Uxr, Uxφ), (Urx, Urr, Urφ), (Uφx, Uφr, Uφφ) = self.func
+                (Uxx_x, Uxr_x, Uxφ_x), (Urx_r, Urr_r, Urφ_r), (Uφx_φ, Uφr_φ, Uφφ_φ) = d_func
+                func = np.array([Uxx_x + Urx_r + Urx/r + Uφx_φ/r,
+                                 Urr_r + Uxr_x + Uφr_φ/r + (Urr - Uφφ)/r,
+                                 Uφφ_φ/r + Uxφ_x + Urφ_r + (Urφ + Uφr)/r])
+            else:
+                raise ValueError(f'Improper tensor rank: {rank}')
+        else:
+            raise ValueError(f'Unknown coordinates: {coord}')
+                
+        return TensorField(self.mesh, func)        
     
     def laplacian(self, bval=None):
         "Calculate a Laplacian"
@@ -239,7 +294,7 @@ class TensorField:
         if isinstance(val, TensorField):
             if self.mesh != val.mesh:
                 raise ValueError('Inconsistent meshes')
-            return TensorField(self.mesh, func=self.func/x.func)
+            return TensorField(self.mesh, func=self.func/val.func)
         else:
             val = np.asarray(val)
             func = self.func/val[(...,) + (None,)*self.mesh.ndim]

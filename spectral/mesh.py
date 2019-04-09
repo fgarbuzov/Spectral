@@ -121,7 +121,7 @@ class MeshProduct(Mesh):
         axes1 = axes[:self.dd]
         axes2 = axes[self.dd:]
         func = self.mesh2.eval(func, X[self.dd:], axes2)
-        removed = sum(axis is not None for axis in axes2)
+        removed = sum(x is not None for x in X[self.dd:])
         axes1 = tuple(axis + removed for axis in axes1)
         func = self.mesh1.eval(func, X[:self.dd], axes1)
         return func
