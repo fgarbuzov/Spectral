@@ -114,6 +114,9 @@ class Multidomain(Mesh1D):
     def scale(self, x):
         "Find a domain number and scale x"
         x = np.asarray(x)
+        if self.periodic:
+            x1, x2 = self.endpoints
+            x = np.mod(x - x1, x2 - x1) + x1
         dom_num = sum(p < x for p in self.partition[1:-1])
         x_scaled = (x - self.a[dom_num])/self.b[dom_num]
         return dom_num, x_scaled
