@@ -10,4 +10,4 @@ from .mesh import *
 from .tensorfield import *
 from .plot import *
 
-__version__ = '1.02.5'
+__version__ = '1.04.1'
