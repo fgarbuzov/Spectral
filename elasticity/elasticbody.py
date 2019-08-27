@@ -4,6 +4,7 @@ class ElasticBody:
     def set_constants(self, type, moduli):
         self.rho = moduli[0]
         self.young = moduli[1]
+        self.c = np.sqrt(self.young/self.rho)
         self.nu = moduli[2]
         self.lam = self.young*self.nu/(1 + self.nu)/(1 - 2*self.nu)
         self.mu = self.young/2/(1 + self.nu)
@@ -87,8 +88,10 @@ class CircularRod(ElasticBody):
         self.alpha1 = (1 + nu)/4
         self.alpha2 = -(1 + nu + nu**2)/2
         self.alpha3 = self.alpha1
-        self.beta1 = -(3/2*young + A*(1 - 2*nu**3)
+        self.beta1 = -(3.0/2*young + A*(1 - 2*nu**3)
                        + 3*B*(1 + 2*nu**2)*(1 - 2*nu) + C*(1 - 2*nu)**3)
+        self.beta2 = -2*(1 + nu)*(2*B*(1 - 2*nu)*(1 - 2*nu + 6*nu**2) + 2*C*(1 - 2*nu)**3
+                                  + nu*(young + 2*A*nu*(1 - 2*nu)))
         self.beta4 = (4*(B + C)**2 - 2*young*(A + 3*B + C + 2*(D + F + G + H)) - young**2/2
                       + 4*nu*(-5*B**2 - 14*B*C - 9*C**2 + young*(3*B + 3*C + 2*D + 4*F + 8*H))
                       + 4*nu**2*(18*B**2 + 44*B*C + 30*C**2 + 2*A*(B + C)
@@ -100,17 +103,17 @@ class CircularRod(ElasticBody):
                       - 8*nu**6*(A + 6*B + 4*C)**2)
 
         self.q4 = nu**2*(7 - 4*nu - 20*nu**2 + 4*nu**3 + 12*nu**4)/48/(1 - nu**2)
-        self.q3 = nu*(-4*C*(1 + nu)*(1 - 2*nu)**3 + 4*B*(-1 + 3*nu - 6*nu**2 + 2*nu**3 + 12*nu**4)
-                      - nu*(young*(1 + 2*nu) + 4*A*nu*(1 + nu)*(1 - 2*nu)))/2
-        self.q2 = nu*(2*A*(1 - 4*nu**2 + 2*nu**3 + 8*nu**4) + 2*B*(-1 + 6*nu - 18*nu**2 - 4*nu**3 + 48*nu**4)
+        self.q3 = nu*(2*A*(1 - 4*nu**2 + 2*nu**3 + 8*nu**4) + 2*B*(-1 + 6*nu - 18*nu**2 - 4*nu**3 + 48*nu**4)
                       - 2*C*(1 - 2*nu)**3*(3 + 4*nu) + young*(3 - 2*nu - 4*nu**2))/2
+        self.q2 = nu*(-4*C*(1 + nu)*(1 - 2*nu)**3 + 4*B*(-1 + 3*nu - 6*nu**2 + 2*nu**3 + 12*nu**4)
+                      - nu*(young*(1 + 2*nu) + 4*A*nu*(1 + nu)*(1 - 2*nu)))/2
         self.q1 = -nu**2/2
 
-        self.a1 = 1/6 + 2*self.q4/3/self.q1**2 - 2*(2*self.alpha1 + self.alpha2)/3/self.q1
-        self.a2 = (3*self.q1*self.q3 - 8*self.q4*self.beta1 
-            + self.q1*(self.q1 + 2*(2*self.alpha1 + self.alpha2))*self.beta1)/(9*self.q1**2*young)
-        self.a3 = (self.q1 + 10*self.q4/self.q1 + 2*(2*self.alpha1 + self.alpha2)
-                   + 3*(self.q3 - self.q2)/self.beta1)/12
+        self.a2 = 1.0/6 + 2*self.q4/3/self.q1**2 - 2*(2*self.alpha1 + self.alpha2)/3/self.q1
+        self.a3 = (self.q3 + (self.q1*(1 - 4*self.a2)
+                              - 2*(2*self.alpha1 + self.alpha2))*self.beta1)/3/self.q1/young
+        self.a1 = (-2*self.q2 + 3*(6*self.a2 - 1)*self.q1*self.beta1
+                   + 12*(2*self.alpha1 + self.alpha2)*self.beta1 + 6*self.a3*self.q1*young)/8/self.beta1
 
         self.beta4hat = self.beta4 + self.beta1*(self.beta1*(1 - 2*self.a2) - self.a3*young)/3
     
@@ -129,7 +132,7 @@ class CircularRod(ElasticBody):
             + (self.l + 2*self.m)/3*I1**3 - 2*self.m*I1*I2 + self.n*I3)
         return pot.int(coord='cylindrical')
     
-    def __sol_gardner_params(self, A):
+    def sol_gardner_params(self, A):
         B = np.sqrt(1 + 3*self.beta4hat*A/2/self.beta1/self.young)
         F = np.sqrt(self.beta1*A/3/self.young/self.R**2/self.q1)
         c = np.sqrt(self.young/self.rho)
@@ -137,14 +140,27 @@ class CircularRod(ElasticBody):
         return B, F, v
 
     def sol_gardner_strain(self, A, x, t):
-        B, F, v = self.__sol_gardner_params(A)
+        B, F, v = self.sol_gardner_params(A)
         return A/(1 + B*np.cosh(F*(x - v*t)))
 
     def sol_gardner_displ(self, A, x, t):
-        B, F, v = self.__sol_gardner_params(A)
-        res = 2*A*np.arctanh(np.sqrt((1 - B)/(1 + B))*np.tanh(F*(x - v*t)/2))/F/np.sqrt(1 - B**2)
+        B, F, v = self.sol_gardner_params(A)
+        if (B < 1.0) and (B > -1.0):
+            return 2*A*np.arctanh(np.sqrt((1 - B)/(1 + B))*np.tanh(F*(x - v*t)/2))/F/np.sqrt(1 - B**2)
+        if B > 1.0:
+            return 2*A*np.arctan(np.sqrt((B - 1)/(B + 1))*np.tanh(F*(x - v*t)/2))/F/np.sqrt(B**2 - 1)
         #res += (np.max(res) - np.min(res))/2
-        return res
+
+    def sol_kdv_strain(self, A, x, t):
+        F = np.sqrt(self.beta1*2*A/3/self.young/self.R**2/self.q1)
+        v = -self.beta1*A*self.c/3/self.young
+        return 2*A/(1 + np.cosh(F*(x - v*t)))
+    
+    def sol_ekdv_strain(self, u, A, x, t):
+        v = self.sol_gardner_params(A)[2]
+        c = np.sqrt(self.young/self.rho)
+        return (u(x) - (self.R**2*self.a1*u.diff().diff()(x) + self.a2*x*v/c*u.diff()(x)
+                        + np.abs(self.a3*u.diff()(x)*self.sol_gardner_displ(A, x, t))))
 
 
 class RectBar(ElasticBody):

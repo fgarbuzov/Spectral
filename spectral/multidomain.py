@@ -42,7 +42,7 @@ class Multidomain(Mesh1D):
         if not isinstance(mesh, Multidomain):
             raise ValueError("Improper mesh")
         if self.M != mesh.M:
-            raise ValueNumber("Could not change the number of domains")
+            raise ValueError("Could not change the number of domains")
         axis, = axes
         func = np.moveaxis(func, axis, -1)
         func = func.reshape(func.shape[:-1] + (self.M, -1))
