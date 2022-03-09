@@ -65,7 +65,7 @@ class Legendre(Mesh1D):
                 res[-1] += (b1 - func[-1])/w[-1]
         return np.moveaxis(res, 0, axis)
     
-    def match_domains(self, func, axes):
+    def match_domains(self, func, axes, masks):
         "Match mesh domains"
         # there are no domains
         return func

@@ -75,29 +75,32 @@ class Multidomain(Mesh1D):
         func = func.reshape(func.shape[:-2] + (-1,))
         return np.moveaxis(func, -1, axis)
     
-    def match_domains(self, func, axes):
+    def match_domains(self, func, axes, masks):
         "Match mesh domains"
         axis, = axes
+        mask, = masks
         if axis is None:
             return func
         func = np.moveaxis(func, axis, -1)
         func = func.reshape(func.shape[:-1] + (self.M, -1))
         # match boundaries inside each domain
-        func = self.domain.match_domains(func, (-1,))
+        func = self.domain.match_domains(func, (-1,), ((),))
         # match boundaries between domains
         w = self.domain.weights()
         if not self.periodic:
             w0 = w[0]*self.b[1:]
             w1 = w[-1]*self.b[:-1]
-            f = (w0*func[...,1:,0] + w1*func[...,:-1,-1])/(w0 + w1)
-            func[...,1:,0] = f
-            func[...,:-1,-1] = f
+            func0 = func[...,1:,0]
+            func1 = func[...,:-1,-1]
+            f = np.moveaxis((w0*func0 + w1*func1)/(w0 + w1), -1, axis)[mask]
+            np.moveaxis(func0, -1, axis)[mask] = f
+            np.moveaxis(func1, -1, axis)[mask] = f
         else:
             w0 = w[0]*self.b
             w1 = w[-1]*np.roll(self.b, 1)
             f = (w0*func[...,0] + w1*np.roll(func[...,-1], 1, -1))/(w0 + w1)
-            func[...,0] = f
-            func[...,-1] = np.roll(f, -1, -1)
+            func[...,0][mask] = f[mask]
+            func[...,-1][mask] = np.roll(f[mask], -1, -1) # check mask
         func = func.reshape(func.shape[:-2] + (-1,))
         return np.moveaxis(func, -1, axis)
     

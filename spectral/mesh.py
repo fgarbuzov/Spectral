@@ -79,7 +79,7 @@ class MeshProduct(Mesh):
         if not isinstance(mesh, MeshProduct):
             raise ValueError("Improper mesh")
         if self.ndim != mesh.ndim:
-            raise ValueNumber("Could not change the number of dimensions")
+            raise ValueError("Could not change the number of dimensions")
         func = self.mesh1.remesh(func, mesh.mesh1, axes[:self.dd])
         func = self.mesh2.remesh(func, mesh.mesh2, axes[self.dd:])
         return func
@@ -104,10 +104,10 @@ class MeshProduct(Mesh):
                 bval = bval[self.dd:]
             return self.mesh2.diff(func, axis, dim - self.dd, bval)
         
-    def match_domains(self, func, axes):
+    def match_domains(self, func, axes, masks):
         "Match mesh domains"
-        func = self.mesh1.match_domains(func, axes[:self.dd])
-        func = self.mesh2.match_domains(func, axes[self.dd:])
+        func = self.mesh1.match_domains(func, axes[:self.dd], masks[:self.dd])
+        func = self.mesh2.match_domains(func, axes[self.dd:], masks[self.dd:])
         return func
         
     def int(self, func, axes):

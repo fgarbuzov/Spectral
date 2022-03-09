@@ -1,6 +1,7 @@
 import numpy as np
 from .multidomain import *
 from .mesh import *
+import pickle 
 
 class TensorField:
     # Hight priority to overcome numpy arrays
@@ -85,21 +86,24 @@ class TensorField:
         func = self.mesh.diff(self.func, axis, dim, bval)
         return TensorField(self.mesh, func)
 
-    def match_domains(self, *dims):
+    def match_domains(self, *dims, masks=None):
         "Match mesh domains"
         if len(dims) == 0:
             dims = range(self.mesh.ndim)
+        if masks is None:
+            masks = [()] * len(dims)
         axes = tuple(d - self.mesh.ndim if d in dims else None 
                      for d in range(self.mesh.ndim))
-        func = self.mesh.match_domains(self.func, axes)
+        func = self.mesh.match_domains(self.func, axes, masks)
         return TensorField(self.mesh, func)    
     
     def grad(self, bval=None, coord='cartesian', rank=None):
         "Calculate a gradient"
         if rank is None:
             rank = self.ndim
-        d_func = (self.mesh.diff(self.func, axis, dim, bval)
-                  for dim, axis in enumerate(range(-self.mesh.ndim, 0)))
+        d_func = [self.mesh.diff(self.func, axis, dim, bval)
+                  for dim, axis in enumerate(range(-self.mesh.ndim, 0))]
+        #print(type(d_func))
         if coord == 'cartesian':
             func = np.stack(d_func)
         elif coord == 'cylindrical':
@@ -153,7 +157,31 @@ class TensorField:
         else:
             raise ValueError(f'Unknown coordinates: {coord}')
                 
-        return TensorField(self.mesh, func)        
+        return TensorField(self.mesh, func)  
+    
+    def curl(self, bval=None, coord='cartesian', rank=None):
+        "Calculate a curl"
+        if rank is None:
+            rank = self.ndim
+        d_func = [self.mesh.diff(self.func, axis, dim, bval)
+                  for dim, axis in enumerate(range(-self.mesh.ndim, 0))]
+        if coord == 'cartesian':
+            if rank == 0:
+                raise ValueError('Curl of scalar function is undefined.')
+            if rank == 1:
+                if self.mesh.ndim == 2:
+                    (Ux_x, Ux_y), (Uy_x, Uy_y) = d_func
+                    func = Uy_x - Ux_y
+                else:
+                    raise NotImplementedError()
+            if rank == 2:
+                raise NotImplementedError('Curl of a tensor is not implemented yet')
+        elif coord == 'cylindrical':
+            raise NotImplementedError('Curl in cylindrical coordinates is not implemented yet')
+        else:
+            raise ValueError(f'Unknown coordinates: {coord}')
+                
+        return TensorField(self.mesh, func)
     
     def laplacian(self, bval=None):
         "Calculate a Laplacian"

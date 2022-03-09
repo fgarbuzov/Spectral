@@ -42,7 +42,7 @@ class Fourier(Mesh1D):
         np.moveaxis(f, axis, -1)[:] *= 1j*k
         return np.fft.irfft(f, self.N + 1, axis=axis)
 
-    def match_domains(self, func, axes):
+    def match_domains(self, func, axes, masks):
         "Match mesh domains"
         # there are no domains
         return func

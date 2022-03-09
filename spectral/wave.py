@@ -26,7 +26,7 @@ class Wave(Mesh1D):
             raise ValueError("Wave is one-dimensional")
         return 1j*self.k*func
         
-    def match_domains(self, func, axes):
+    def match_domains(self, func, axes, masks):
         "Match mesh domains"
         # there are no domains
         return func

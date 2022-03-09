@@ -21,7 +21,7 @@ class Constant(Mesh1D):
             raise ValueError("Constant is one-dimensional")
         return np.zeros_like(func)
         
-    def match_domains(self, func, axes):
+    def match_domains(self, func, axes, masks):
         "Match mesh domains"
         # there are no domains
         return func
