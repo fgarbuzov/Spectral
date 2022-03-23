@@ -198,7 +198,10 @@ if __name__ == "__main__":
     print('body and mesh created')
 
     # create output parameters file
-    of = open(os.path.join(PROJ_DIR, RESULTS_DIR, output_prefix + PARAMS_FILENAME), 'w')
+    res_path = os.path.join(PROJ_DIR, RESULTS_DIR)
+    if not os.path.exists(res_path):
+        os.mkdir(res_path)
+    of = open(os.path.join(res_path, output_prefix + PARAMS_FILENAME), 'w')
     params_dict[STOP_TIME] = tmax
     params_dict[TIME_STEP] = dt
     params_dict[START_TIME] = t0
@@ -241,11 +244,11 @@ if __name__ == "__main__":
             U[k], V[k] = decompress(r.y)
         # backup
         if (k > 0) and (BACKUP_ITER in params_dict) and not(k % params_dict[BACKUP_ITER]):
-            np.save(os.path.join(PROJ_DIR, RESULTS_DIR, output_prefix + U_FILENAME), U.func)
-            np.save(os.path.join(PROJ_DIR, RESULTS_DIR, output_prefix + V_FILENAME), V.func)
+            np.save(os.path.join(res_path, output_prefix + U_FILENAME), U.func)
+            np.save(os.path.join(res_path, output_prefix + V_FILENAME), V.func)
     
     # save simulation
-    np.save(os.path.join(PROJ_DIR, RESULTS_DIR, output_prefix + U_FILENAME), U.func)
-    np.save(os.path.join(PROJ_DIR, RESULTS_DIR, output_prefix + V_FILENAME), V.func)
+    np.save(os.path.join(res_path, output_prefix + U_FILENAME), U.func)
+    np.save(os.path.join(res_path, output_prefix + V_FILENAME), V.func)
 
     print('simulation saved, id (prefix): {}'.format(output_prefix))
