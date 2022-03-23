@@ -1,3 +1,4 @@
 spectral/__pycache__
 .ipynb_checkpoints/
 simulation_results/
+__pycache__/

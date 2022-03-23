@@ -10,9 +10,9 @@ Some simulations obtained with this code are available [here](https://www.resear
 
 **Usage**: run `python simulation.py` with 7 arguments: material file (elastic moduli), body file (geometry and mesh), impact file (amplitude of impact and time-width), output filename, simulation time (in microseconds) and time step.
 
-For example, run two commands:
+For example, run the following two commands:
 - `python simulation.py params/ps_retarded_nonlin params/rect_bar_225_10_10_medium params/impact_medium test_retarded 90 1`
 - `python simulation.py params/ps_increased_young params/rect_bar_225_10_10_medium params/impact_medium test_lin 90 1`
 
-This tool will simulate strains from the impact on the end of the rectangular polystyrene bar 225 mm long and 10 mm thick.
-Then execute all cells (except the last two) in the ResultsVisualization notebook to see the results.
+This tool will simulate strains from the impact on the end of the rectangular polystyrene bar 225 mm long and 10 mm thick. In the first simulation the bar is viscoelastic ([generalized Maxwell model](https://en.wikipedia.org/wiki/Generalized_Maxwell_model)) and nonlinearly elastic, while in the second simulation the bar is linear and absolutely elastic. The results will be saved in `simulation_results` directory.
+Then enter the name of the simulation results files and execute all but the last two cells in the ResultsVisualization notebook to see the results.
