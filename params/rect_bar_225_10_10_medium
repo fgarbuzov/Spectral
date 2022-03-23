@@ -1,0 +1,11 @@
+body = bar
+
+# lengths in mm
+L = 225
+Hy = 10
+Hz = 10
+
+# x, y, z
+domain_number = 45, 2, 2
+domain_points = 10, 10, 10
+domain_period = False, False, False
