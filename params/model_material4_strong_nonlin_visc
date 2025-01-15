@@ -1,0 +1,14 @@
+type = nonlinear elasticity, retarded nonlinear viscosity
+rho = 1.
+young = 4
+poiss = 0.33
+tau = 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0
+#xi  = [lambda_1, lambda_2, ...]
+#eta = [mu_1, mu_2, ...]
+xi = 0.1
+eta = 0.05
+l1 = -800, 780; 780, -780
+m1 = -600, 585; 585, -585
+n1 = -400, 390; 390, -390
+#h1 = 0, 0; 0, 0
+nonlin_tau = 1.0

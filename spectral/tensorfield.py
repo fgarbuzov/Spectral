@@ -1,7 +1,6 @@
 import numpy as np
 from .multidomain import *
 from .mesh import *
-import pickle 
 
 class TensorField:
     # Hight priority to overcome numpy arrays

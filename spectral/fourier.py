@@ -66,3 +66,6 @@ class Fourier(Mesh1D):
         A = np.exp(1j*np.multiply.outer(k, x_scaled))/(self.N + 1)
         A[1:] *= 2
         return np.tensordot(A, f, (0, axis)).real
+    
+    def __str__(self):
+        return 'fourier'
