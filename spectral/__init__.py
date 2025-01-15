@@ -1,4 +1,3 @@
-from .progress import *
 #from .cheb import *
 from . import legendre
 from .legendre import *
@@ -8,7 +7,6 @@ from .wave import *
 from .multidomain import *
 from .mesh import *
 from .tensorfield import *
-from .simulation import *
 from .plot import *
 
-__version__ = '1.04.1'
+__version__ = '1.04.2'

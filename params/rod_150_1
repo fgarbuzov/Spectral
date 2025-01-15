@@ -1,0 +1,11 @@
+body = rod
+
+# lengths in mm
+L = 150
+R = 1
+
+# x, y, z
+domain_number = 150, 1, 1
+domain_points = 10, 10, 1
+domain_period = true, false, true
+domain_basis  = legendre, legendre, fourier

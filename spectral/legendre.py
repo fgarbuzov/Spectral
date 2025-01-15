@@ -89,6 +89,9 @@ class Legendre(Mesh1D):
         func = legval(x_scaled, coeff)
         return func
     
+    def __str__(self):
+        return 'legendre'
+    
 def memoize(f):
     results = {}
     def helper(*args):
@@ -160,7 +163,7 @@ def diff_matrix(N, quadrature):
 def legendre_gen(x, diff=0):
     "Generator of legendre polynomials at points x"
     u0 = np.zeros_like(x)
-    u1 = np.ones_like(x)*sp.special.factorial2(2*diff - 1)
+    u1 = np.ones_like(x)*sp.special.factorial2(max(2*diff - 1, 0))
     x = np.asarray(x)
     for k in range(diff):
         yield u0

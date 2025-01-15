@@ -1,4 +1,5 @@
 spectral/__pycache__
 .ipynb_checkpoints/
-simulation_results/
+simulation_results/nonlin_visc_Bsuv_0_len_2000_point_dens_1_U.npy
+simulation_results/nonlin_visc_len_200_U.npy
 __pycache__/
