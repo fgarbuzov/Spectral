@@ -19,8 +19,8 @@ def plot_deformations(fig, ax, U, T, times_to_plot, diff=None, x=None,
     else:
         u = U
     
-    for i in range(len(times_to_plot)):
-        im = ax[i].imshow(np.flip(u[times_to_plot[i]](x,y,0).T, axis=0),
+    for i, t in enumerate(times_to_plot):
+        im = ax[i].imshow(np.flip(u[t](x,y,0).T, axis=0),
                           extent=(x.min(), x.max(), y.min(), y.max()), 
                           vmin=vmin, vmax=vmax)
         ax[i].set_aspect('equal')
@@ -28,7 +28,7 @@ def plot_deformations(fig, ax, U, T, times_to_plot, diff=None, x=None,
         #ax[i].set_title('t = %.1f $\mu$s' % T[t[i]], fontsize=11)
         fig.colorbar(im, ax=ax[i], aspect=5, pad=0.015)
         ax[i].text(0.875, 0.6, ('(' + 'abcdefgh'[i] + ') ' 
-                                + f't = {int(T[times_to_plot[i]])} $\mu$s'), 
+                                + f't = {int(T[t])} $\mu$s'),
                    c='w', transform=ax[i].transAxes, fontsize=12)
     
     ax[-1].set_xlabel('x, mm')

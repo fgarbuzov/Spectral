@@ -306,7 +306,7 @@ def der_nl(t, y, body):
     L, x = y[0], y[1]
     nu = body.poiss
     beta_su = ((body.l1*(1 - 2*nu)**3 + 2*body.m1*(1 + nu)**2*(1 - 2*nu) 
-                + 3*body.n1*nu**2) / body.young) * 3 / body.beta0
+                + 3*body.n1*nu**2) / body.young) * 3 / body.beta
     beta_su[0, 0] = 0
     tau = np.append([body.tau.max()**3], body.nonlin_tau) # the first one is 'infinity'
     theta, eta = np.meshgrid(body.c0*tau/L, body.c0*tau/L)
